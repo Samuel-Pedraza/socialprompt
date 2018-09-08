@@ -5,6 +5,9 @@
 	Version:     0.0.1
 	Author:      Samuel Pedraza
  */
+	function initialize_shared_count(){
+		add_option('shared_count', 0);
+	}
 
 	function register_files(){
 		wp_register_style('mainCSS', plugin_dir_url( __FILE__ ) . 'css/main.css');
@@ -27,30 +30,31 @@
 	}
 
 function output_socialprompt(){
-	register_files(); ?>
+	register_files();
+	initialize_shared_count(); ?>
 	
-	<div class="container">
-	  <div class="row">
-	    <div class="col-md-12  p-5" id="element">
 	      <div class="card">
 	        <div class="card-body typewriter">
-	          <p class="pb-3">Hi! We'd love to know what you thought of our article so far. Could you tweet us your thoughts?</p>          
-	          <div class="form-group">
-	            <input type="text" class="form-control">
-	          </div>
-	          <div class="form-group">
-	            <button class="btn btn-primary">Tweet</button>
-	          </div>
+		          <p class="pb-3">Hi! We'd love to know what you thought of our article so far. Could you tweet us your thoughts?</p>          
+		          <div class="form-group">
+		            <input type="text" name="tweettext" id="texttweet">
+		          </div>
+		          <div class="form-group">
+		            <button id="tweetthis">Tweet</button>
+		          </div>
+	          </form>
 	        </div>
 	      </div>
-	    </div>
-	  </div>
-	</div>
 	<?php
-
-
 	}
-	add_action('wp_head', 'register_files');
-	add_action( 'wp_enqueue_scripts', 'register_files');
+
+	function update_shared_count(){
+		$shared_count_value = get_option('shared_count');
+		$shared_count_value += 1;
+		update_option('shared_count', $shared_count_value);
+	}
+	
+	add_action( 'wp_ajax_updatesocialsharecount', 'update_shared_count' );
+	add_action('wp_ajax_nopriv_updatesocialsharecount', 'update_shared_count');
 	add_shortcode('output_social_prompt_shortcode', 'social_prompt_shortcode');
  ?>
