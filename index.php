@@ -5,47 +5,46 @@
 	Version:     0.0.1
 	Author:      Samuel Pedraza
  */
-	function initialize_shared_count(){
+	function initialize_options(){
 		add_option('shared_count', 0);
+		add_option('display_text');
 	}
 
-	function register_files(){
-		wp_register_style('mainCSS', plugin_dir_url( __FILE__ ) . 'css/main.css');
-		wp_register_script('indexJS', plugin_dir_url( __FILE__ ) . 'js/index.js');	
+	function register_css(){
+		wp_enqueue_style('sharedcountCSS', plugin_dir_url( __FILE__ ) . 'css/main.css' );
+	}
 
-		wp_enqueue_style('mainCSS');
-		wp_enqueue_script('indexJS');
+	function register_js(){
+		wp_register_script('mainJS', '/wp-content/plugins/socialprompt/js/index.js');
+		wp_enqueue_script('indexJS');		
+	}
+
+	function output_socialprompt(){
+		initialize_options();
+		register_js(); ?>
 		
+		      <div class="card">
+		        <div class="card-body typewriter">
+			          <p class="pb-3"><?php echo get_option('display_text') ?></p>          
+			          <div class="form-group">
+			            <input type="text" name="tweettext" id="texttweet">
+			          </div>
+			          <div class="form-group">
+			            <button id="tweetthis">Tweet</button>
+			          </div>
+		          </form>
+		        </div>
+		      </div>
+		<?php
 	}
 
+	//this is a workaround ensuring widget doesnt show on top of page
 	function social_prompt_shortcode($atts, $content = null) { 
-	    // Start output buffering
       ob_start();
-      // Run the function
       output_socialprompt();
-      // Capture buffer as a string
       $output = ob_get_clean();
 
 	    return $output; 
-	}
-
-function output_socialprompt(){
-	register_files();
-	initialize_shared_count(); ?>
-	
-	      <div class="card">
-	        <div class="card-body typewriter">
-		          <p class="pb-3">Hi! We'd love to know what you thought of our article so far. Could you tweet us your thoughts?</p>          
-		          <div class="form-group">
-		            <input type="text" name="tweettext" id="texttweet">
-		          </div>
-		          <div class="form-group">
-		            <button id="tweetthis">Tweet</button>
-		          </div>
-	          </form>
-	        </div>
-	      </div>
-	<?php
 	}
 
 	function update_shared_count(){
@@ -55,7 +54,7 @@ function output_socialprompt(){
 	}
 
 	function display_social_sharing_count(){
-		?>
+		register_css();?>
 		<div>
 			<h3>Social Sharing Count</h3>
 		</div>
@@ -63,19 +62,46 @@ function output_socialprompt(){
 			<p><?php echo get_option('shared_count'); ?></p>
 		</div>
 		<div>
-			<h4>Shortcode</h4>
+			<h3>Shortcode</h3>
 		</div>
 		<div>
 			<p>[output_social_prompt_shortcode]</p>
 		</div>
+		<div>
+			<h3>Set Text</h3>
+		</div>
+		<div>
+			<form method="POST" action="<?php echo admin_url( 'admin-post.php' ); ?>">
+				<input type="hidden" name="action" value="updatetext">
+				<input type="text" value="<?php echo get_option('display_text'); ?>" name="display_text">
+				<input type="submit">
+			</form>
+		</div>
 		<?php
 	}
+
+	function update_display_text(){
+		global $wp; 
+		$display_text_new = sanitize_text_field($_POST['display_text']);
+		update_option('display_text', $display_text_new);
+		return wp_redirect("/wp-admin/admin.php?page=shared-count");
+	}
+
 	function addMenu(){
 		add_menu_page("Shared Count", "Shared Count", 4, "shared-count", "display_social_sharing_count");
 	}
 
+	add_action('wp_enqueue_scripts', 'register_js');
+	add_action('wp_head', 'register_css');
+
+	//ajax update for clicks on social
 	add_action( 'wp_ajax_updatesocialsharecount', 'update_shared_count' );
 	add_action('wp_ajax_nopriv_updatesocialsharecount', 'update_shared_count');
+
+	//updating text from admin menu
+	add_action( 'admin_post_updatetext', 'update_display_text');
 	add_action("admin_menu", "addMenu");
+
+	//shortcode
 	add_shortcode('output_social_prompt_shortcode', 'social_prompt_shortcode');
  ?>
