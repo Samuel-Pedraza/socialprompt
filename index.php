@@ -53,8 +53,29 @@ function output_socialprompt(){
 		$shared_count_value += 1;
 		update_option('shared_count', $shared_count_value);
 	}
-	
+
+	function display_social_sharing_count(){
+		?>
+		<div>
+			<h3>Social Sharing Count</h3>
+		</div>
+		<div>
+			<p><?php echo get_option('shared_count'); ?></p>
+		</div>
+		<div>
+			<h4>Shortcode</h4>
+		</div>
+		<div>
+			<p>[output_social_prompt_shortcode]</p>
+		</div>
+		<?php
+	}
+	function addMenu(){
+		add_menu_page("Shared Count", "Shared Count", 4, "shared-count", "display_social_sharing_count");
+	}
+
 	add_action( 'wp_ajax_updatesocialsharecount', 'update_shared_count' );
 	add_action('wp_ajax_nopriv_updatesocialsharecount', 'update_shared_count');
+	add_action("admin_menu", "addMenu");
 	add_shortcode('output_social_prompt_shortcode', 'social_prompt_shortcode');
  ?>
